@@ -1,4 +1,5 @@
 from conans import ConanFile, CMake, tools
+import os
 
 
 class KdbConan(ConanFile):
@@ -10,42 +11,50 @@ class KdbConan(ConanFile):
     description = "Companion files to kdb+ and q"
     topics = ("conan", "kdb", "q", "timeseries")
     settings = "os", "compiler", "build_type", "arch"
-    options = {"tls": [True, False]}
-    default_options = {"tls": False}
+    options = {
+        "shared": [True, False],
+        "tls": [True, False]
+    }
+    default_options = {
+        "shared": True,
+        "tls": False
+    }
     generators = "cmake"
+    exports_sources = "CMakeLists.txt", "kdbConfig.cmake"
 
-    def build(self):
+    def source(self):
         root_url = "https://raw.githubusercontent.com/KxSystems/kdb/master"
         header = "k.h"
         tools.download("{}/c/c/{}".format(root_url, header), header)
-        os_map = {"Linux": "l", "Macos": "m", "Windows": "w", "Solaris": "s"}
-        arch_map = {"x86": "32", "x86_64": "64"}
-        zo = os_map[str(self.settings.os)] + arch_map[str(self.settings.arch)]
-        name = "e" if self.options.tls else "c"
+
+        os = str(self.settings.os)[0].lower()
+        arch = "32" if self.settings.arch == "x86" else "64"
+        zo = os + arch
+        lib_folder = "lib"
 
         if self.settings.os == "Windows":
             libs = [
-                ".dll",
-                ".lib",
-                "st.dll",
-                "st.lib",
-                "_static.lib",
-                "st_static.lib",
+                "c.dll",
+                "c.lib",
+                "cst.dll",
+                "cst.lib",
+                "c_static.lib",
+                "cst_static.lib",
             ]
-            libs = [name + l for l in libs]
+            if self.settings.tls:
+                libs = ['e' + l[1:] for l in libs]
+
             for lib in libs:
-                library_url = "{}/{}/{}".format(root_url, zo, lib)
-                tools.download(library_url, lib)
+                url = "/".join([root_url, zo, lib])
+                tools.download(url, "/".join([lib_folder, lib]))
         else:
-            lib = name + ".o"
-            library_url = "{}/{}/{}".format(root_url, zo, lib)
-            tools.download(library_url, lib)
+            lib = "e" if self.options.tls else "c"
+            lib += ".o"
+            url = "/".join([root_url, zo, lib])
+            tools.download(url, "/".join([lib_folder, lib]))
 
-    def package(self):
-        self.copy("*.h", dst="include/kdb", keep_path=False)
-        self.copy("*.dll", dst="lib", keep_path=False)
-        self.copy("*.lib", dst="lib", keep_path=False)
-        self.copy("*.o", dst="lib", keep_path=False)
-
-    def package_info(self):
-        self.cpp_info.libs = tools.collect_libs(self)
+    def build(self):
+        cmake = CMake(self)
+        cmake.configure()
+        cmake.build()
+        cmake.install()
