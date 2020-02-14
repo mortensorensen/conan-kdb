@@ -58,3 +58,7 @@ class KdbConan(ConanFile):
         cmake.configure()
         cmake.build()
         cmake.install()
+
+    def package_info(self):
+        self.cpp_info.libs = tools.collect_libs(self)
+

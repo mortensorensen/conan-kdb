@@ -7,11 +7,7 @@ add_library(${TARGET_NAME} INTERFACE)
 # set_target_properties(${TARGET_NAME}
 #   PROPERTIES PUBLIC_HEADER "${${TARGET_NAME}_HEADERS}")
 
-if(BUILD_SHARED_LIBS)
-  set(KDB_LIBRARIES "c.o")
-else()
-  set(KDB_LIBRARIES "e.o")
-endif()
+set(KDB_LIBRARIES "c.o")
 
 target_include_directories(${TARGET_NAME} INTERFACE
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
