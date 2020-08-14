@@ -1,10 +1,9 @@
 from conans import ConanFile, CMake, tools
-import os
 
 
 class KdbConan(ConanFile):
     name = "kdb"
-    version = "1.0.0"
+    version = "0.1.0"
     license = "https://github.com/KxSystems/kdb/blob/master/LICENSE"
     url = "https://github.com/mortensorensen/conan-kdb"
     homepage = "https://github.com/KxSystems/kdb"
